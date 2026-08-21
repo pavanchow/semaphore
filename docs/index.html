@@ -233,9 +233,466 @@
   <p class="sub">A length-prefixed binary message protocol, built from scratch. A framing codec you can read end to end, plus a TCP server and client that speak it.</p>
   <div class="cta-row">
     <a class="btn btn-primary" href="https://github.com/pavanchow/semaphore">View on GitHub</a>
-    <a class="btn btn-secondary" href="#wire-format">See the wire format</a>
+    <a class="btn btn-secondary" href="#demo">Try the live demo</a>
   </div>
 </header>
+
+<style>
+  .demo-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .demo-panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 24px;
+  }
+  .demo-panel h3 {
+    font-size: 16px;
+    margin: 0 0 16px;
+  }
+  .demo-panel .field-row { margin-bottom: 14px; }
+  .demo-panel label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .demo-panel input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: inherit;
+    background: #fff;
+  }
+  .msgtype-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .msgtype-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--ink);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .msgtype-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  .hexdump {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 2.1;
+    word-break: break-all;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    min-height: 44px;
+  }
+  .hb {
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin: 1px;
+  }
+  .hb-len { background: var(--accent); color: #fff; }
+  .hb-tag { background: #d9730d; color: #fff; }
+  .hb-payload { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+  .legend {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 12px 0 0;
+  }
+  .legend .hb { padding: 1px 7px; font-size: 12px; }
+  .hex-summary {
+    font-size: 13px;
+    color: var(--muted);
+    margin: 12px 0 0;
+  }
+  .decoder-state {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 14px;
+  }
+  .decoder-result {
+    margin-top: 12px;
+    font-size: 14px;
+    min-height: 20px;
+  }
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+  }
+  .btn-row button {
+    border: 1px solid var(--line);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .badge-err { color: #c23434; }
+  .badge-ok { color: #1a8a4a; }
+  @media (max-width: 720px) {
+    .demo-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<section id="demo">
+  <h2>Try it live</h2>
+  <p class="lede">Pick a message below and see the exact bytes it puts on the wire. Then feed those same bytes into a decoder one at a time and watch the frame reassemble the same way it would arrive split across a real socket read.</p>
+
+  <div class="demo-grid">
+    <div class="demo-panel">
+      <h3>Encoder</h3>
+      <div class="msgtype-row" id="msgtype-row">
+        <button type="button" class="msgtype-btn active" data-type="set">SET</button>
+        <button type="button" class="msgtype-btn" data-type="get">GET</button>
+        <button type="button" class="msgtype-btn" data-type="ping">PING</button>
+        <button type="button" class="msgtype-btn" data-type="raw">RAW</button>
+      </div>
+      <div class="field-row" data-field="key">
+        <label for="demo-key">Key</label>
+        <input type="text" id="demo-key" value="name" maxlength="64">
+      </div>
+      <div class="field-row" data-field="value">
+        <label for="demo-value">Value</label>
+        <input type="text" id="demo-value" value="semaphore" maxlength="200">
+      </div>
+      <div class="field-row" data-field="raw" style="display:none">
+        <label for="demo-raw">Raw payload text</label>
+        <input type="text" id="demo-raw" value="hello wire" maxlength="200">
+      </div>
+      <div class="hexdump" id="hexdump"></div>
+      <p class="legend">
+        <span class="hb hb-len">len</span> 4 byte length prefix
+        <span class="hb hb-tag">tag</span> 1 byte message kind
+        <span class="hb hb-payload">body</span> the rest of the frame
+      </p>
+      <p class="hex-summary" id="hex-summary"></p>
+    </div>
+
+    <div class="demo-panel">
+      <h3>Streaming decoder</h3>
+      <div class="decoder-state" id="decoder-state">Ready.</div>
+      <div class="hexdump" id="decoder-buf"></div>
+      <div class="decoder-result" id="decoder-result"></div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-primary" id="btn-step">Step one byte</button>
+        <button type="button" class="btn btn-secondary" id="btn-play">Play</button>
+        <button type="button" class="btn btn-secondary" id="btn-reset">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="demo-panel" style="margin-top:24px">
+    <h3>Oversize length prefix</h3>
+    <p class="lede" style="margin-bottom:16px">The decoder checks the declared length against the frame cap before it allocates anything for the payload. A length prefix above the cap is rejected on the spot.</p>
+    <div class="btn-row" style="margin-top:0">
+      <button type="button" class="btn btn-secondary" id="btn-oversize">Feed an oversize length prefix</button>
+    </div>
+    <div class="decoder-state" id="oversize-result" style="margin-top:14px">Not tested yet.</div>
+  </div>
+</section>
+
+<script>
+(function () {
+  "use strict";
+
+  var MAX_FRAME_LEN = 16 * 1024 * 1024;
+
+  function toHex(b) { return b.toString(16).padStart(2, "0"); }
+
+  function u16be(n) { return [(n >> 8) & 0xff, n & 0xff]; }
+  function u32be(n) { return [(n >>> 24) & 0xff, (n >>> 16) & 0xff, (n >>> 8) & 0xff, n & 0xff]; }
+  function strBytes(s) { return Array.prototype.slice.call(new TextEncoder().encode(s)); }
+
+  function buildBody(type, key, value, raw) {
+    if (type === "raw") return strBytes(raw);
+    if (type === "ping") return [0x01];
+    if (type === "set") {
+      var k = strBytes(key), v = strBytes(value);
+      return [0x03].concat(u16be(k.length), k, u32be(v.length), v);
+    }
+    if (type === "get") {
+      var kg = strBytes(key);
+      return [0x04].concat(u16be(kg.length), kg);
+    }
+    return [];
+  }
+
+  function decodeMessage(bytes) {
+    if (bytes.length === 0) return { error: "empty message body" };
+    var tag = bytes[0], pos = 1;
+    function readString() {
+      if (bytes.length < pos + 2) throw "truncated";
+      var len = (bytes[pos] << 8) | bytes[pos + 1];
+      pos += 2;
+      if (bytes.length < pos + len) throw "truncated";
+      var slice = bytes.slice(pos, pos + len);
+      pos += len;
+      return new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(slice));
+    }
+    function readBytes() {
+      if (bytes.length < pos + 4) throw "truncated";
+      var len = bytes[pos] * 16777216 + (bytes[pos + 1] << 16) + (bytes[pos + 2] << 8) + bytes[pos + 3];
+      pos += 4;
+      if (bytes.length < pos + len) throw "truncated";
+      var slice = bytes.slice(pos, pos + len);
+      pos += len;
+      return slice;
+    }
+    try {
+      switch (tag) {
+        case 0x01: return { kind: "PING" };
+        case 0x02: return { kind: "PONG" };
+        case 0x03: return { kind: "SET", key: readString(), value: readBytes() };
+        case 0x04: return { kind: "GET", key: readString() };
+        case 0x05: return { kind: "VALUE", value: readBytes() };
+        case 0x06: return { kind: "NOT_FOUND" };
+        default: return { error: "unknown message tag 0x" + toHex(tag) };
+      }
+    } catch (e) {
+      return { error: "message body truncated" };
+    }
+  }
+
+  function bytesToDisplay(arr) {
+    try {
+      return '"' + new TextDecoder("utf-8", { fatal: true }).decode(new Uint8Array(arr)) + '"';
+    } catch (e) {
+      return "0x" + arr.map(toHex).join("");
+    }
+  }
+
+  function makeDecoder(maxLen) {
+    var state = { mode: "len", buf: [] };
+    return {
+      getState: function () { return state; },
+      pushByte: function (b) {
+        if (state.mode === "len") {
+          state.buf.push(b);
+          if (state.buf.length === 4) {
+            var len = state.buf[0] * 16777216 + (state.buf[1] << 16) + (state.buf[2] << 8) + state.buf[3];
+            if (len > maxLen) {
+              state = { mode: "len", buf: [] };
+              return { type: "error", len: len };
+            }
+            if (len === 0) {
+              state = { mode: "len", buf: [] };
+              return { type: "frame", payload: [] };
+            }
+            state = { mode: "payload", buf: [], remaining: len, total: len };
+            return { type: "lenknown", len: len };
+          }
+          return { type: "lenbyte", have: state.buf.length };
+        }
+        state.buf.push(b);
+        state.remaining -= 1;
+        if (state.remaining === 0) {
+          var payload = state.buf.slice();
+          state = { mode: "len", buf: [] };
+          return { type: "frame", payload: payload };
+        }
+        return { type: "payloadbyte", remaining: state.remaining, total: state.total };
+      }
+    };
+  }
+
+  var currentType = "set";
+  var currentBody = [];
+  var currentBytes = [];
+
+  var hexdumpEl = document.getElementById("hexdump");
+  var summaryEl = document.getElementById("hex-summary");
+  var decoderStateEl = document.getElementById("decoder-state");
+  var decoderBufEl = document.getElementById("decoder-buf");
+  var decoderResultEl = document.getElementById("decoder-result");
+
+  function addByte(container, b, cls) {
+    var span = document.createElement("span");
+    span.className = "hb " + cls;
+    span.textContent = toHex(b);
+    container.appendChild(span);
+  }
+
+  function renderHexdump(lenBytes, body, type) {
+    hexdumpEl.innerHTML = "";
+    lenBytes.forEach(function (b) { addByte(hexdumpEl, b, "hb-len"); });
+    if (type === "raw") {
+      body.forEach(function (b) { addByte(hexdumpEl, b, "hb-payload"); });
+    } else {
+      if (body.length > 0) addByte(hexdumpEl, body[0], "hb-tag");
+      for (var i = 1; i < body.length; i++) addByte(hexdumpEl, body[i], "hb-payload");
+    }
+    var tagNote = type === "raw" ? "no tag, raw frame payload" : "tag 0x" + toHex(body[0]) + " (" + type.toUpperCase() + ")";
+    summaryEl.textContent = lenBytes.length + " byte length prefix (value " + body.length + ") plus " + body.length + " byte body, " + tagNote + ", " + currentBytes.length + " bytes total on the wire.";
+  }
+
+  function updateFieldVisibility() {
+    document.querySelector('[data-field="key"]').style.display = (currentType === "set" || currentType === "get") ? "" : "none";
+    document.querySelector('[data-field="value"]').style.display = (currentType === "set") ? "" : "none";
+    document.querySelector('[data-field="raw"]').style.display = (currentType === "raw") ? "" : "none";
+  }
+
+  function computeAndRender() {
+    var key = document.getElementById("demo-key").value;
+    var value = document.getElementById("demo-value").value;
+    var raw = document.getElementById("demo-raw").value;
+    currentBody = buildBody(currentType, key, value, raw);
+    var lenBytes = u32be(currentBody.length);
+    currentBytes = lenBytes.concat(currentBody);
+    renderHexdump(lenBytes, currentBody, currentType);
+    resetDecoder();
+  }
+
+  var decoder = null, feedBytes = [], feedPos = 0, playTimer = null, tagPending = true;
+
+  function resetDecoder() {
+    if (playTimer) { clearInterval(playTimer); playTimer = null; }
+    document.getElementById("btn-play").textContent = "Play";
+    decoder = makeDecoder(MAX_FRAME_LEN);
+    feedBytes = currentBytes.slice();
+    feedPos = 0;
+    tagPending = true;
+    decoderBufEl.innerHTML = "";
+    decoderResultEl.textContent = "";
+    decoderResultEl.classList.remove("badge-err", "badge-ok");
+    decoderStateEl.textContent = "Ready. " + feedBytes.length + " bytes queued, feed them one at a time.";
+  }
+
+  function stepDecoder() {
+    if (feedPos >= feedBytes.length) {
+      decoderStateEl.textContent = "All bytes fed. Press Reset to feed this message again.";
+      if (playTimer) { clearInterval(playTimer); playTimer = null; document.getElementById("btn-play").textContent = "Play"; }
+      return;
+    }
+    var beforeMode = decoder.getState().mode;
+    var b = feedBytes[feedPos++];
+    var ev = decoder.pushByte(b);
+    var cls;
+    if (beforeMode === "len") {
+      cls = "hb-len";
+    } else if (tagPending) {
+      cls = "hb-tag";
+      tagPending = false;
+    } else {
+      cls = "hb-payload";
+    }
+    addByte(decoderBufEl, b, cls);
+
+    if (ev.type === "lenbyte") {
+      decoderStateEl.textContent = "Reading length prefix: " + ev.have + "/4 bytes buffered.";
+    } else if (ev.type === "lenknown") {
+      decoderStateEl.textContent = "Length prefix complete, " + ev.len + " bytes declared. Reading payload.";
+    } else if (ev.type === "payloadbyte") {
+      decoderStateEl.textContent = "Reading payload: " + (ev.total - ev.remaining) + "/" + ev.total + " bytes buffered, " + ev.remaining + " remaining.";
+    } else if (ev.type === "frame") {
+      decoderStateEl.textContent = "Frame complete, " + ev.payload.length + " byte payload reassembled.";
+      tagPending = true;
+      if (currentType === "raw") {
+        decoderResultEl.textContent = "Decoded raw payload: " + bytesToDisplay(ev.payload);
+        decoderResultEl.classList.add("badge-ok");
+      } else {
+        var msg = decodeMessage(ev.payload);
+        if (msg.error) {
+          decoderResultEl.textContent = "Decode error: " + msg.error;
+          decoderResultEl.classList.add("badge-err");
+        } else if (msg.kind === "SET") {
+          decoderResultEl.textContent = "Decoded message: SET key=" + JSON.stringify(msg.key) + " value=" + bytesToDisplay(msg.value);
+          decoderResultEl.classList.add("badge-ok");
+        } else if (msg.kind === "GET") {
+          decoderResultEl.textContent = "Decoded message: GET key=" + JSON.stringify(msg.key);
+          decoderResultEl.classList.add("badge-ok");
+        } else if (msg.kind === "VALUE") {
+          decoderResultEl.textContent = "Decoded message: VALUE " + bytesToDisplay(msg.value);
+          decoderResultEl.classList.add("badge-ok");
+        } else {
+          decoderResultEl.textContent = "Decoded message: " + msg.kind;
+          decoderResultEl.classList.add("badge-ok");
+        }
+      }
+    } else if (ev.type === "error") {
+      decoderStateEl.textContent = "Rejected, length prefix " + ev.len + " exceeds max " + MAX_FRAME_LEN + ". No payload buffer was ever allocated.";
+      decoderResultEl.textContent = "";
+      if (playTimer) { clearInterval(playTimer); playTimer = null; document.getElementById("btn-play").textContent = "Play"; }
+    }
+  }
+
+  function togglePlay() {
+    var btn = document.getElementById("btn-play");
+    if (playTimer) {
+      clearInterval(playTimer);
+      playTimer = null;
+      btn.textContent = "Play";
+      return;
+    }
+    btn.textContent = "Pause";
+    playTimer = setInterval(function () {
+      if (feedPos >= feedBytes.length) {
+        clearInterval(playTimer);
+        playTimer = null;
+        btn.textContent = "Play";
+        return;
+      }
+      stepDecoder();
+    }, 200);
+  }
+
+  function runOversizeTest() {
+    var resEl = document.getElementById("oversize-result");
+    var dec = makeDecoder(MAX_FRAME_LEN);
+    var bytes = [0xff, 0xff, 0xff, 0xff];
+    var result = null;
+    for (var i = 0; i < bytes.length; i++) result = dec.pushByte(bytes[i]);
+    if (result && result.type === "error") {
+      resEl.textContent = "Rejected, frame length " + result.len + " exceeds max " + MAX_FRAME_LEN + ". No payload buffer was ever allocated.";
+      resEl.classList.add("badge-err");
+    } else {
+      resEl.textContent = "Unexpected decoder state.";
+    }
+  }
+
+  document.querySelectorAll(".msgtype-btn").forEach(function (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".msgtype-btn").forEach(function (b) { b.classList.remove("active"); });
+      btn.classList.add("active");
+      currentType = btn.getAttribute("data-type");
+      updateFieldVisibility();
+      computeAndRender();
+    });
+  });
+
+  ["demo-key", "demo-value", "demo-raw"].forEach(function (id) {
+    document.getElementById(id).addEventListener("input", computeAndRender);
+  });
+
+  document.getElementById("btn-step").addEventListener("click", stepDecoder);
+  document.getElementById("btn-play").addEventListener("click", togglePlay);
+  document.getElementById("btn-reset").addEventListener("click", resetDecoder);
+  document.getElementById("btn-oversize").addEventListener("click", runOversizeTest);
+
+  updateFieldVisibility();
+  computeAndRender();
+})();
+</script>
 
 <section id="wire-format">
   <h2>The wire format</h2>
