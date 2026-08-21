@@ -2,11 +2,317 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>semaphore</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Semaphore — a length-prefixed network protocol in Rust</title>
+<meta name="description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec plus a small typed request/response protocol over TCP. No frameworks, no async runtime.">
+<meta name="author" content="Pavan Nallamothu">
+<link rel="canonical" href="https://pavanchow.github.io/semaphore/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Semaphore — a length-prefixed network protocol in Rust">
+<meta property="og:description" content="A length-prefixed framing codec and a small typed request/response protocol over TCP, built from scratch in Rust.">
+<meta property="og:url" content="https://pavanchow.github.io/semaphore/">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Semaphore",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Cross-platform",
+  "description": "A length-prefixed binary message protocol and network protocol in Rust, with a framing codec, a typed request/response protocol, and a TCP server and client.",
+  "author": {
+    "@type": "Person",
+    "name": "Pavan Nallamothu"
+  },
+  "url": "https://pavanchow.github.io/semaphore/",
+  "codeRepository": "https://github.com/pavanchow/semaphore",
+  "programmingLanguage": "Rust"
+}
+</script>
+<style>
+  :root {
+    --accent: #2f6fed;
+    --ink: #14161a;
+    --muted: #5b6270;
+    --line: #e7e9ee;
+    --bg: #ffffff;
+    --panel: #fafbfc;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  header.hero {
+    padding: 120px 0 80px;
+    text-align: center;
+  }
+  .eyebrow {
+    display: inline-block;
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 18px;
+  }
+  h1 {
+    font-size: 56px;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    margin: 0 0 24px;
+    font-weight: 700;
+  }
+  .sub {
+    font-size: 20px;
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 620px;
+    margin: 0 auto 36px;
+  }
+  .cta-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    display: inline-block;
+    padding: 13px 24px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+  }
+  .btn-secondary {
+    background: var(--panel);
+    color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  section {
+    padding: 64px 0;
+    border-top: 1px solid var(--line);
+  }
+  h2 {
+    font-size: 30px;
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+  }
+  .lede {
+    color: var(--muted);
+    font-size: 17px;
+    line-height: 1.6;
+    max-width: 640px;
+    margin: 0 0 40px;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 26px;
+  }
+  .card h3 {
+    font-size: 17px;
+    margin: 0 0 10px;
+  }
+  .card p {
+    font-size: 14.5px;
+    line-height: 1.6;
+    color: var(--muted);
+    margin: 0;
+  }
+  .frame-diagram {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: var(--panel);
+    padding: 40px 28px;
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    overflow-x: auto;
+  }
+  .seg {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 22px 18px;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  .seg-len {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 10px 0 0 10px;
+    min-width: 150px;
+  }
+  .seg-payload {
+    background: #fff;
+    border: 1px dashed var(--accent);
+    border-left: none;
+    border-radius: 0 10px 10px 0;
+    flex: 1;
+    min-width: 260px;
+    color: var(--ink);
+  }
+  .seg strong { font-size: 14px; display: block; margin-bottom: 6px; }
+  .seg span { font-size: 12.5px; opacity: 0.85; }
+  pre {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14.5px;
+  }
+  th, td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  th {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  code {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+    background: var(--panel);
+    padding: 2px 6px;
+    border-radius: 5px;
+    font-size: 13.5px;
+  }
+  footer {
+    padding: 48px 0 80px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 14px;
+    border-top: 1px solid var(--line);
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+  @media (max-width: 720px) {
+    h1 { font-size: 38px; }
+    .cards { grid-template-columns: 1fr; }
+    header.hero { padding: 80px 0 56px; }
+  }
+</style>
 </head>
 <body>
-<h1>semaphore</h1>
-<p>Site coming soon.</p>
-<p><a href="https://github.com/pavanchow/semaphore">View repository</a></p>
+<div class="wrap">
+
+<header class="hero">
+  <span class="eyebrow">Network protocol in Rust</span>
+  <h1>Semaphore</h1>
+  <p class="sub">A length-prefixed binary message protocol, built from scratch. A framing codec you can read end to end, plus a TCP server and client that speak it.</p>
+  <div class="cta-row">
+    <a class="btn btn-primary" href="https://github.com/pavanchow/semaphore">View on GitHub</a>
+    <a class="btn btn-secondary" href="#wire-format">See the wire format</a>
+  </div>
+</header>
+
+<section id="wire-format">
+  <h2>The wire format</h2>
+  <p class="lede">Every message on the wire is a 4-byte big-endian length prefix followed by exactly that many payload bytes. That is the entire framing layer.</p>
+  <div class="frame-diagram">
+    <div class="seg seg-len">
+      <strong>length</strong>
+      <span>u32, big-endian</span>
+    </div>
+    <div class="seg seg-payload">
+      <strong>payload</strong>
+      <span>exactly `length` bytes</span>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Why it exists</h2>
+  <p class="lede">Most people reach for a framework the moment two processes need to talk over a socket. Semaphore takes the other path: small enough to read in one sitting, with every layer a pure, unit-tested piece you can hold in your head.</p>
+  <div class="cards">
+    <div class="card">
+      <h3>Framing codec</h3>
+      <p>A pure, dependency-free encoder and a streaming decoder that reassembles a frame correctly even when it arrives split across many reads, and rejects an oversize length prefix before allocating anything.</p>
+    </div>
+    <div class="card">
+      <h3>Typed protocol</h3>
+      <p>PING/PONG and a small key-value SET/GET request-response protocol encoded on top of frames, with a one-byte tag and bounds-checked bodies.</p>
+    </div>
+    <div class="card">
+      <h3>TCP server and client</h3>
+      <p>Plain std::net and OS threads. No async runtime. The server holds an in-memory map; the client issues blocking SET/GET/PING calls.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Message types</h2>
+  <p class="lede">The payload of a frame is a small typed protocol: a one-byte tag followed by a tag-specific body.</p>
+  <table>
+    <thead>
+      <tr><th>Message</th><th>Tag</th><th>Body</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>PING</td><td><code>0x01</code></td><td>none</td></tr>
+      <tr><td>PONG</td><td><code>0x02</code></td><td>none</td></tr>
+      <tr><td>SET</td><td><code>0x03</code></td><td>key (u16-len string), value (u32-len bytes)</td></tr>
+      <tr><td>GET</td><td><code>0x04</code></td><td>key (u16-len string)</td></tr>
+      <tr><td>VALUE</td><td><code>0x05</code></td><td>value (u32-len bytes)</td></tr>
+      <tr><td>NOT_FOUND</td><td><code>0x06</code></td><td>none</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section>
+  <h2>Usage</h2>
+  <p class="lede">Start the server, then talk to it from the CLI or as a library.</p>
+  <pre>cargo run -- serve --addr 127.0.0.1:7878
+
+cargo run -- ping --addr 127.0.0.1:7878
+cargo run -- set  --addr 127.0.0.1:7878 name semaphore
+cargo run -- get  --addr 127.0.0.1:7878 name</pre>
+</section>
+
+<footer>
+  <p><a href="https://github.com/pavanchow/semaphore">github.com/pavanchow/semaphore</a></p>
+  <p>By Pavan Nallamothu.</p>
+</footer>
+
+</div>
+<noscript>
+  <div style="max-width:680px;margin:40px auto;padding:0 24px;font-family:sans-serif;">
+    <h1>Semaphore</h1>
+    <p>A length-prefixed binary message protocol, a network protocol in Rust built from scratch: a framing codec, a small typed request/response protocol, and a TCP server and client.</p>
+    <p>Wire format: a 4-byte big-endian length prefix followed by exactly that many payload bytes.</p>
+    <p><a href="https://github.com/pavanchow/semaphore">github.com/pavanchow/semaphore</a></p>
+    <p>By Pavan Nallamothu.</p>
+  </div>
+</noscript>
 </body>
 </html>
