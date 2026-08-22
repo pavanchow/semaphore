@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Semaphore — a length-prefixed network protocol in Rust</title>
+<title>Semaphore: a length-prefixed network protocol in Rust</title>
 <meta name="description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec plus a small typed request/response protocol over TCP. No frameworks, no async runtime.">
 <meta name="author" content="Pavan Nallamothu">
 <link rel="canonical" href="https://pavanchow.github.io/semaphore/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Semaphore — a length-prefixed network protocol in Rust">
+<meta property="og:title" content="Semaphore: a length-prefixed network protocol in Rust">
 <meta property="og:description" content="A length-prefixed framing codec and a small typed request/response protocol over TCP, built from scratch in Rust.">
 <meta property="og:url" content="https://pavanchow.github.io/semaphore/">
 <script type="application/ld+json">
@@ -29,388 +29,234 @@
 }
 </script>
 <style>
-  :root {
-    --accent: #2f6fed;
-    --ink: #14161a;
-    --muted: #5b6270;
-    --line: #e7e9ee;
-    --bg: #ffffff;
-    --panel: #fafbfc;
+  :root{
+    --accent:#2f6fed;--accent-soft:#eaf0fe;
+    --ink:#14161a;--muted:#5b6270;--faint:#9a9dab;
+    --line:#e7e9ee;--panel:#fafbfc;--panel2:#fbfbfd;
+    --mono:ui-monospace,SFMono-Regular,Menlo,"SF Mono",monospace;
   }
-  * { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    padding: 0;
-    background: var(--bg);
-    color: var(--ink);
-    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Helvetica, Arial, sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-  .wrap {
-    max-width: 880px;
-    margin: 0 auto;
-    padding: 0 24px;
-  }
-  header.hero {
-    padding: 120px 0 80px;
-    text-align: center;
-  }
-  .eyebrow {
-    display: inline-block;
-    font-size: 13px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--accent);
-    font-weight: 600;
-    margin-bottom: 18px;
-  }
-  h1 {
-    font-size: 56px;
-    line-height: 1.08;
-    letter-spacing: -0.02em;
-    margin: 0 0 24px;
-    font-weight: 700;
-  }
-  .sub {
-    font-size: 20px;
-    line-height: 1.55;
-    color: var(--muted);
-    max-width: 620px;
-    margin: 0 auto 36px;
-  }
-  .cta-row {
-    display: flex;
-    gap: 12px;
-    justify-content: center;
-    flex-wrap: wrap;
-  }
-  .btn {
-    display: inline-block;
-    padding: 13px 24px;
-    border-radius: 10px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 0.15s ease, opacity 0.15s ease;
-  }
-  .btn:hover { transform: translateY(-1px); }
-  .btn-primary {
-    background: var(--accent);
-    color: #fff;
-  }
-  .btn-secondary {
-    background: var(--panel);
-    color: var(--ink);
-    border: 1px solid var(--line);
-  }
-  section {
-    padding: 64px 0;
-    border-top: 1px solid var(--line);
-  }
-  h2 {
-    font-size: 30px;
-    letter-spacing: -0.01em;
-    margin: 0 0 12px;
-  }
-  .lede {
-    color: var(--muted);
-    font-size: 17px;
-    line-height: 1.6;
-    max-width: 640px;
-    margin: 0 0 40px;
-  }
-  .cards {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
-  }
-  .card {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 26px;
-  }
-  .card h3 {
-    font-size: 17px;
-    margin: 0 0 10px;
-  }
-  .card p {
-    font-size: 14.5px;
-    line-height: 1.6;
-    color: var(--muted);
-    margin: 0;
-  }
-  .frame-diagram {
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    background: var(--panel);
-    padding: 40px 28px;
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    overflow-x: auto;
-  }
-  .seg {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 22px 18px;
-    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-  }
-  .seg-len {
-    background: var(--accent);
-    color: #fff;
-    border-radius: 10px 0 0 10px;
-    min-width: 150px;
-  }
-  .seg-payload {
-    background: #fff;
-    border: 1px dashed var(--accent);
-    border-left: none;
-    border-radius: 0 10px 10px 0;
-    flex: 1;
-    min-width: 260px;
-    color: var(--ink);
-  }
-  .seg strong { font-size: 14px; display: block; margin-bottom: 6px; }
-  .seg span { font-size: 12.5px; opacity: 0.85; }
-  pre {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 12px;
-    padding: 20px 22px;
-    overflow-x: auto;
-    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: 13.5px;
-    line-height: 1.6;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14.5px;
-  }
-  th, td {
-    text-align: left;
-    padding: 10px 14px;
-    border-bottom: 1px solid var(--line);
-  }
-  th {
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  code {
-    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-    background: var(--panel);
-    padding: 2px 6px;
-    border-radius: 5px;
-    font-size: 13.5px;
-  }
-  footer {
-    padding: 48px 0 80px;
-    text-align: center;
-    color: var(--muted);
-    font-size: 14px;
-    border-top: 1px solid var(--line);
-  }
-  footer a { color: var(--accent); text-decoration: none; }
-  @media (max-width: 720px) {
-    h1 { font-size: 38px; }
-    .cards { grid-template-columns: 1fr; }
-    header.hero { padding: 80px 0 56px; }
-  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:#fff;color:var(--ink);
+    font:17px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 28px}
+  a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+
+  nav{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(20px);border-bottom:1px solid var(--line)}
+  nav .row{display:flex;justify-content:space-between;align-items:center;height:56px;max-width:1040px;margin:0 auto;padding:0 28px}
+  nav .brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:650;letter-spacing:-.01em}
+  nav .brand .gem{width:16px;height:16px;transform:rotate(45deg);border-radius:3px;background:linear-gradient(135deg,#7ea1f7,var(--accent))}
+  nav .links{display:flex;gap:26px;align-items:center}
+  nav .links a{color:var(--ink);font-size:14.5px}
+  @media(max-width:640px){nav .links a:not(.gh){display:none}}
+
+  .hero{padding:70px 0 30px;text-align:center}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+  h1{font-size:clamp(40px,7vw,72px);line-height:1.03;letter-spacing:-.035em;font-weight:680;margin:18px 0 0}
+  .hero p.sub{max-width:620px;margin:24px auto 0;font-size:clamp(17px,2.1vw,21px);color:var(--muted)}
+  .cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:32px}
+  .btn{display:inline-block;padding:13px 26px;border-radius:999px;font-size:15px;font-weight:600;text-decoration:none;transition:transform .15s ease,opacity .15s ease}
+  .btn:hover{transform:translateY(-1px);text-decoration:none}
+  .btn-primary{background:var(--ink);color:#fff}
+  .btn-secondary{background:#fff;color:var(--ink);border:1px solid var(--line)}
+
+  .stage{max-width:940px;margin:44px auto 0;padding:0 28px}
+  .card{position:relative;background:linear-gradient(180deg,#fbfcff,#f4f6fb);border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 1px 0 #fff inset,0 18px 50px -30px rgba(40,60,120,.28);padding:28px}
+  .caption{font-family:var(--mono);font-size:12px;color:var(--faint);margin:0 0 20px}
+
+  section{padding:92px 0;border-top:1px solid var(--line)}
+  h2{font-size:clamp(27px,4.2vw,42px);line-height:1.12;letter-spacing:-.025em;font-weight:660;text-align:center;max-width:760px;margin:0 auto}
+  .lead{max-width:640px;margin:22px auto 0;text-align:center;color:var(--muted);font-size:18px}
+
+  .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:940px;margin:48px auto 0}
+  @media(max-width:720px){.cards{grid-template-columns:1fr}}
+  .icard{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .icard h3{font-size:17px;margin-bottom:8px}.icard p{color:var(--muted);font-size:15px}
+
+  .frame-diagram{max-width:760px;margin:48px auto 0;border:1px solid var(--line);border-radius:16px;background:var(--panel2);padding:36px 28px;display:flex;align-items:stretch;gap:0;overflow-x:auto}
+  .seg{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px 18px;font-family:var(--mono)}
+  .seg-len{background:var(--accent);color:#fff;border-radius:12px 0 0 12px;min-width:150px}
+  .seg-payload{background:#fff;border:1px dashed var(--accent);border-left:none;border-radius:0 12px 12px 0;flex:1;min-width:260px;color:var(--ink)}
+  .seg strong{font-size:14px;display:block;margin-bottom:6px}.seg span{font-size:12.5px;opacity:.85}
+
+  table{width:100%;border-collapse:collapse;font-size:14.5px;max-width:760px;margin:48px auto 0}
+  th,td{text-align:left;padding:10px 14px;border-bottom:1px solid var(--line)}
+  th{color:var(--muted);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.04em}
+  code{font-family:var(--mono);background:var(--panel);padding:2px 6px;border-radius:5px;font-size:13.5px}
+
+  pre{background:#15161c;color:#ececf4;border-radius:14px;padding:20px 22px;font-family:var(--mono);font-size:13.5px;overflow-x:auto;max-width:640px;margin:40px auto 0}
+  footer{padding:64px 0;border-top:1px solid var(--line);text-align:center;color:var(--muted)}
+  footer .name{color:var(--ink);font-weight:600}
+
+  .demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  @media(max-width:760px){.demo-grid{grid-template-columns:1fr}}
+  .demo-panel{background:#fff;border:1px solid var(--line);border-radius:14px;padding:22px}
+  .demo-panel h3{font-size:16px;margin:0 0 16px}
+  .demo-panel .field-row{margin-bottom:14px}
+  .demo-panel label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+  .demo-panel input[type="text"]{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;background:#fff}
+  .msgtype-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+  .msgtype-btn{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  .msgtype-btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .hexdump{font-family:var(--mono);font-size:13px;line-height:2.1;word-break:break-all;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:10px;min-height:44px}
+  .hb{display:inline-block;padding:2px 4px;border-radius:4px;margin:1px}
+  .hb-len{background:var(--accent);color:#fff}
+  .hb-tag{background:#d9730d;color:#fff}
+  .hb-payload{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .legend{font-size:13px;color:var(--muted);margin:12px 0 0}
+  .legend .hb{padding:1px 7px;font-size:12px}
+  .hex-summary{font-size:13px;color:var(--muted);margin:12px 0 0}
+  .decoder-state{font-family:var(--mono);font-size:13px;padding:12px 14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-bottom:14px}
+  .decoder-result{margin-top:12px;font-size:14px;min-height:20px}
+  .btn-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn-row button{border:1px solid var(--line);cursor:pointer;font-family:inherit;padding:11px 20px;border-radius:999px;font-size:14px;font-weight:600}
+  .btn-row .btn-secondary{padding:11px 20px}
+  .badge-err{color:#c23434}
+  .badge-ok{color:#1a8a4a}
+  .oversize-panel{max-width:940px;margin:20px auto 0}
 </style>
 </head>
 <body>
-<div class="wrap">
-
-<header class="hero">
-  <span class="eyebrow">Network protocol in Rust</span>
-  <h1>Semaphore</h1>
-  <p class="sub">A length-prefixed binary message protocol, built from scratch. A framing codec you can read end to end, plus a TCP server and client that speak it.</p>
-  <div class="cta-row">
-    <a class="btn btn-primary" href="https://github.com/pavanchow/semaphore">View on GitHub</a>
-    <a class="btn btn-secondary" href="#demo">Try the live demo</a>
-  </div>
-</header>
-
-<style>
-  .demo-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
-  }
-  .demo-panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 24px;
-  }
-  .demo-panel h3 {
-    font-size: 16px;
-    margin: 0 0 16px;
-  }
-  .demo-panel .field-row { margin-bottom: 14px; }
-  .demo-panel label {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    margin-bottom: 6px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-  .demo-panel input[type="text"] {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    font-size: 14px;
-    font-family: inherit;
-    background: #fff;
-  }
-  .msgtype-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
-  }
-  .msgtype-btn {
-    padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid var(--line);
-    background: #fff;
-    color: var(--ink);
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .msgtype-btn.active {
-    background: var(--accent);
-    color: #fff;
-    border-color: var(--accent);
-  }
-  .hexdump {
-    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: 13px;
-    line-height: 2.1;
-    word-break: break-all;
-    padding: 16px;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    min-height: 44px;
-  }
-  .hb {
-    display: inline-block;
-    padding: 2px 4px;
-    border-radius: 4px;
-    margin: 1px;
-  }
-  .hb-len { background: var(--accent); color: #fff; }
-  .hb-tag { background: #d9730d; color: #fff; }
-  .hb-payload { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-  .legend {
-    font-size: 13px;
-    color: var(--muted);
-    margin: 12px 0 0;
-  }
-  .legend .hb { padding: 1px 7px; font-size: 12px; }
-  .hex-summary {
-    font-size: 13px;
-    color: var(--muted);
-    margin: 12px 0 0;
-  }
-  .decoder-state {
-    font-family: "SF Mono", ui-monospace, Menlo, Consolas, monospace;
-    font-size: 13px;
-    padding: 12px 14px;
-    background: #fff;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    margin-bottom: 14px;
-  }
-  .decoder-result {
-    margin-top: 12px;
-    font-size: 14px;
-    min-height: 20px;
-  }
-  .btn-row {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-top: 16px;
-  }
-  .btn-row button {
-    border: 1px solid var(--line);
-    cursor: pointer;
-    font-family: inherit;
-  }
-  .badge-err { color: #c23434; }
-  .badge-ok { color: #1a8a4a; }
-  @media (max-width: 720px) {
-    .demo-grid { grid-template-columns: 1fr; }
-  }
-</style>
-
-<section id="demo">
-  <h2>Try it live</h2>
-  <p class="lede">Pick a message below and see the exact bytes it puts on the wire. Then feed those same bytes into a decoder one at a time and watch the frame reassemble the same way it would arrive split across a real socket read.</p>
-
-  <div class="demo-grid">
-    <div class="demo-panel">
-      <h3>Encoder</h3>
-      <div class="msgtype-row" id="msgtype-row">
-        <button type="button" class="msgtype-btn active" data-type="set">SET</button>
-        <button type="button" class="msgtype-btn" data-type="get">GET</button>
-        <button type="button" class="msgtype-btn" data-type="ping">PING</button>
-        <button type="button" class="msgtype-btn" data-type="raw">RAW</button>
-      </div>
-      <div class="field-row" data-field="key">
-        <label for="demo-key">Key</label>
-        <input type="text" id="demo-key" value="name" maxlength="64">
-      </div>
-      <div class="field-row" data-field="value">
-        <label for="demo-value">Value</label>
-        <input type="text" id="demo-value" value="semaphore" maxlength="200">
-      </div>
-      <div class="field-row" data-field="raw" style="display:none">
-        <label for="demo-raw">Raw payload text</label>
-        <input type="text" id="demo-raw" value="hello wire" maxlength="200">
-      </div>
-      <div class="hexdump" id="hexdump"></div>
-      <p class="legend">
-        <span class="hb hb-len">len</span> 4 byte length prefix
-        <span class="hb hb-tag">tag</span> 1 byte message kind
-        <span class="hb hb-payload">body</span> the rest of the frame
-      </p>
-      <p class="hex-summary" id="hex-summary"></p>
+  <nav><div class="row">
+    <div class="brand"><span class="gem"></span>Semaphore</div>
+    <div class="links">
+      <a href="#demo">Demo</a><a href="#wire-format">Wire format</a><a href="#source">Usage</a>
+      <a class="gh" href="https://github.com/pavanchow/semaphore">GitHub</a>
     </div>
+  </div></nav>
 
-    <div class="demo-panel">
-      <h3>Streaming decoder</h3>
-      <div class="decoder-state" id="decoder-state">Ready.</div>
-      <div class="hexdump" id="decoder-buf"></div>
-      <div class="decoder-result" id="decoder-result"></div>
-      <div class="btn-row">
-        <button type="button" class="btn btn-primary" id="btn-step">Step one byte</button>
-        <button type="button" class="btn btn-secondary" id="btn-play">Play</button>
-        <button type="button" class="btn btn-secondary" id="btn-reset">Reset</button>
+  <div class="hero">
+    <p class="eyebrow">Network protocol in Rust</p>
+    <h1>Bytes on the wire,<br>framed by hand.</h1>
+    <p class="sub">Semaphore is a length-prefixed binary message protocol built from scratch, with a framing codec you can read end to end, plus a TCP server and client that speak it.</p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="https://github.com/pavanchow/semaphore">View on GitHub</a>
+      <a class="btn btn-secondary" href="#demo">Try the live demo</a>
+    </div>
+  </div>
+
+  <div class="stage">
+    <div id="demo" class="card">
+      <p class="caption">pick a message, watch it become bytes, then decode those bytes one at a time</p>
+
+      <div class="demo-grid">
+        <div class="demo-panel">
+          <h3>Encoder</h3>
+          <div class="msgtype-row" id="msgtype-row">
+            <button type="button" class="msgtype-btn active" data-type="set">SET</button>
+            <button type="button" class="msgtype-btn" data-type="get">GET</button>
+            <button type="button" class="msgtype-btn" data-type="ping">PING</button>
+            <button type="button" class="msgtype-btn" data-type="raw">RAW</button>
+          </div>
+          <div class="field-row" data-field="key">
+            <label for="demo-key">Key</label>
+            <input type="text" id="demo-key" value="name" maxlength="64">
+          </div>
+          <div class="field-row" data-field="value">
+            <label for="demo-value">Value</label>
+            <input type="text" id="demo-value" value="semaphore" maxlength="200">
+          </div>
+          <div class="field-row" data-field="raw" style="display:none">
+            <label for="demo-raw">Raw payload text</label>
+            <input type="text" id="demo-raw" value="hello wire" maxlength="200">
+          </div>
+          <div class="hexdump" id="hexdump"></div>
+          <p class="legend">
+            <span class="hb hb-len">len</span> 4 byte length prefix
+            <span class="hb hb-tag">tag</span> 1 byte message kind
+            <span class="hb hb-payload">body</span> the rest of the frame
+          </p>
+          <p class="hex-summary" id="hex-summary"></p>
+        </div>
+
+        <div class="demo-panel">
+          <h3>Streaming decoder</h3>
+          <div class="decoder-state" id="decoder-state">Ready.</div>
+          <div class="hexdump" id="decoder-buf"></div>
+          <div class="decoder-result" id="decoder-result"></div>
+          <div class="btn-row">
+            <button type="button" class="btn btn-primary" id="btn-step">Step one byte</button>
+            <button type="button" class="btn btn-secondary" id="btn-play">Play</button>
+            <button type="button" class="btn btn-secondary" id="btn-reset">Reset</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-panel oversize-panel">
+        <h3>Oversize length prefix</h3>
+        <p class="lede" style="margin-bottom:16px;color:var(--muted);font-size:15px">The decoder checks the declared length against the frame cap before it allocates anything for the payload. A length prefix above the cap is rejected on the spot.</p>
+        <div class="btn-row" style="margin-top:0">
+          <button type="button" class="btn btn-secondary" id="btn-oversize">Feed an oversize length prefix</button>
+        </div>
+        <div class="decoder-state" id="oversize-result" style="margin-top:14px">Not tested yet.</div>
       </div>
     </div>
   </div>
 
-  <div class="demo-panel" style="margin-top:24px">
-    <h3>Oversize length prefix</h3>
-    <p class="lede" style="margin-bottom:16px">The decoder checks the declared length against the frame cap before it allocates anything for the payload. A length prefix above the cap is rejected on the spot.</p>
-    <div class="btn-row" style="margin-top:0">
-      <button type="button" class="btn btn-secondary" id="btn-oversize">Feed an oversize length prefix</button>
+  <section id="wire-format">
+    <h2>The wire format</h2>
+    <p class="lead">Every message on the wire is a 4 byte big-endian length prefix followed by exactly that many payload bytes. That is the entire framing layer.</p>
+    <div class="frame-diagram">
+      <div class="seg seg-len">
+        <strong>length</strong>
+        <span>u32, big-endian</span>
+      </div>
+      <div class="seg seg-payload">
+        <strong>payload</strong>
+        <span>exactly `length` bytes</span>
+      </div>
     </div>
-    <div class="decoder-state" id="oversize-result" style="margin-top:14px">Not tested yet.</div>
-  </div>
-</section>
+  </section>
+
+  <section>
+    <h2>Why it exists</h2>
+    <p class="lead">Most people reach for a framework the moment two processes need to talk over a socket. Semaphore takes the other path, small enough to read in one sitting, with every layer a pure, unit-tested piece you can hold in your head.</p>
+    <div class="cards">
+      <div class="icard"><h3>Framing codec</h3><p>A pure, dependency-free encoder and a streaming decoder that reassembles a frame correctly even when it arrives split across many reads, and rejects an oversize length prefix before allocating anything.</p></div>
+      <div class="icard"><h3>Typed protocol</h3><p>PING and PONG, plus a small key-value SET and GET request-response protocol encoded on top of frames, with a one-byte tag and bounds-checked bodies.</p></div>
+      <div class="icard"><h3>TCP server and client</h3><p>Plain std::net and OS threads, no async runtime. The server holds an in-memory map, the client issues blocking SET, GET, and PING calls.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Message types</h2>
+    <p class="lead">The payload of a frame is a small typed protocol, a one-byte tag followed by a tag-specific body.</p>
+    <table>
+      <thead>
+        <tr><th>Message</th><th>Tag</th><th>Body</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>PING</td><td><code>0x01</code></td><td>none</td></tr>
+        <tr><td>PONG</td><td><code>0x02</code></td><td>none</td></tr>
+        <tr><td>SET</td><td><code>0x03</code></td><td>key (u16-len string), value (u32-len bytes)</td></tr>
+        <tr><td>GET</td><td><code>0x04</code></td><td>key (u16-len string)</td></tr>
+        <tr><td>VALUE</td><td><code>0x05</code></td><td>value (u32-len bytes)</td></tr>
+        <tr><td>NOT_FOUND</td><td><code>0x06</code></td><td>none</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="source">
+    <h2>Usage</h2>
+    <p class="lead">Start the server, then talk to it from the CLI or as a library.</p>
+    <pre>cargo run -- serve --addr 127.0.0.1:7878
+
+cargo run -- ping --addr 127.0.0.1:7878
+cargo run -- set  --addr 127.0.0.1:7878 name semaphore
+cargo run -- get  --addr 127.0.0.1:7878 name</pre>
+  </section>
+
+  <noscript>
+    <div class="wrap" style="padding:40px 28px;color:#5b6270">
+      Semaphore is a length-prefixed binary message protocol, a network protocol in Rust built from scratch: a framing codec, a small typed request/response protocol, and a TCP server and client. Wire format: a 4-byte big-endian length prefix followed by exactly that many payload bytes. Source at github.com/pavanchow/semaphore. By Pavan Nallamothu.
+    </div>
+  </noscript>
+
+  <footer>
+    <p>A binary protocol you can read end to end.</p>
+    <p style="margin-top:12px"><a href="https://github.com/pavanchow/semaphore">github.com/pavanchow/semaphore</a></p>
+    <p style="margin-top:12px">By <span class="name">Pavan Nallamothu</span>.</p>
+  </footer>
 
 <script>
 (function () {
@@ -693,83 +539,5 @@
   computeAndRender();
 })();
 </script>
-
-<section id="wire-format">
-  <h2>The wire format</h2>
-  <p class="lede">Every message on the wire is a 4-byte big-endian length prefix followed by exactly that many payload bytes. That is the entire framing layer.</p>
-  <div class="frame-diagram">
-    <div class="seg seg-len">
-      <strong>length</strong>
-      <span>u32, big-endian</span>
-    </div>
-    <div class="seg seg-payload">
-      <strong>payload</strong>
-      <span>exactly `length` bytes</span>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>Why it exists</h2>
-  <p class="lede">Most people reach for a framework the moment two processes need to talk over a socket. Semaphore takes the other path: small enough to read in one sitting, with every layer a pure, unit-tested piece you can hold in your head.</p>
-  <div class="cards">
-    <div class="card">
-      <h3>Framing codec</h3>
-      <p>A pure, dependency-free encoder and a streaming decoder that reassembles a frame correctly even when it arrives split across many reads, and rejects an oversize length prefix before allocating anything.</p>
-    </div>
-    <div class="card">
-      <h3>Typed protocol</h3>
-      <p>PING/PONG and a small key-value SET/GET request-response protocol encoded on top of frames, with a one-byte tag and bounds-checked bodies.</p>
-    </div>
-    <div class="card">
-      <h3>TCP server and client</h3>
-      <p>Plain std::net and OS threads. No async runtime. The server holds an in-memory map; the client issues blocking SET/GET/PING calls.</p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <h2>Message types</h2>
-  <p class="lede">The payload of a frame is a small typed protocol: a one-byte tag followed by a tag-specific body.</p>
-  <table>
-    <thead>
-      <tr><th>Message</th><th>Tag</th><th>Body</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>PING</td><td><code>0x01</code></td><td>none</td></tr>
-      <tr><td>PONG</td><td><code>0x02</code></td><td>none</td></tr>
-      <tr><td>SET</td><td><code>0x03</code></td><td>key (u16-len string), value (u32-len bytes)</td></tr>
-      <tr><td>GET</td><td><code>0x04</code></td><td>key (u16-len string)</td></tr>
-      <tr><td>VALUE</td><td><code>0x05</code></td><td>value (u32-len bytes)</td></tr>
-      <tr><td>NOT_FOUND</td><td><code>0x06</code></td><td>none</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<section>
-  <h2>Usage</h2>
-  <p class="lede">Start the server, then talk to it from the CLI or as a library.</p>
-  <pre>cargo run -- serve --addr 127.0.0.1:7878
-
-cargo run -- ping --addr 127.0.0.1:7878
-cargo run -- set  --addr 127.0.0.1:7878 name semaphore
-cargo run -- get  --addr 127.0.0.1:7878 name</pre>
-</section>
-
-<footer>
-  <p><a href="https://github.com/pavanchow/semaphore">github.com/pavanchow/semaphore</a></p>
-  <p>By Pavan Nallamothu.</p>
-</footer>
-
-</div>
-<noscript>
-  <div style="max-width:680px;margin:40px auto;padding:0 24px;font-family:sans-serif;">
-    <h1>Semaphore</h1>
-    <p>A length-prefixed binary message protocol, a network protocol in Rust built from scratch: a framing codec, a small typed request/response protocol, and a TCP server and client.</p>
-    <p>Wire format: a 4-byte big-endian length prefix followed by exactly that many payload bytes.</p>
-    <p><a href="https://github.com/pavanchow/semaphore">github.com/pavanchow/semaphore</a></p>
-    <p>By Pavan Nallamothu.</p>
-  </div>
-</noscript>
 </body>
 </html>
