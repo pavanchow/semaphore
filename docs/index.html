@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Semaphore: a length-prefixed network protocol in Rust</title>
 <meta name="description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec plus a small typed request/response protocol over TCP. No frameworks, no async runtime.">
-<meta name="author" content="Pavan Nallamothu">
+<meta name="author" content="Pavan Nallamothu (pavanchow)">
 <link rel="canonical" href="https://pavanchow.github.io/semaphore/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Semaphore: a length-prefixed network protocol in Rust">
@@ -115,6 +115,10 @@
   .badge-ok{color:#1a8a4a}
   .oversize-panel{max-width:940px;margin:20px auto 0}
 </style>
+<link rel="author" href="https://github.com/pavanchow">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Person","name":"Pavan Nallamothu","alternateName":"pavanchow","url":"https://github.com/pavanchow","sameAs":["https://github.com/pavanchow","https://hackerone.com/pavanchow"]}
+</script>
 </head>
 <body>
   <nav><div class="row">
@@ -248,7 +252,7 @@ cargo run -- get  --addr 127.0.0.1:7878 name</pre>
 
   <noscript>
     <div class="wrap" style="padding:40px 28px;color:#5b6270">
-      Semaphore is a length-prefixed binary message protocol, a network protocol in Rust built from scratch: a framing codec, a small typed request/response protocol, and a TCP server and client. Wire format: a 4-byte big-endian length prefix followed by exactly that many payload bytes. Source at github.com/pavanchow/semaphore. By Pavan Nallamothu.
+      Semaphore is a length-prefixed binary message protocol, a network protocol in Rust built from scratch: a framing codec, a small typed request/response protocol, and a TCP server and client. Wire format: a 4-byte big-endian length prefix followed by exactly that many payload bytes. Source at github.com/pavanchow/semaphore. By Pavan Nallamothu (pavanchow).
     </div>
   </noscript>
 
