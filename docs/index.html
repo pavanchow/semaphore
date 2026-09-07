@@ -7,6 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="logo.svg">
 <meta name="description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec plus a small typed request/response protocol over TCP. No frameworks, no async runtime.">
 <meta name="author" content="Pavan Nallamothu (pavanchow)">
+<meta name="keywords" content="network protocol, binary protocol, length-prefixed framing, framing codec, streaming decoder, TCP, Rust, std::net, wire format, message protocol, key-value protocol, protocol design, Semaphore, Pavan Nallamothu, pavanchow">
 <link rel="canonical" href="https://pavanchow.github.io/semaphore/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Semaphore: a length-prefixed network protocol in Rust">
@@ -19,6 +20,8 @@
   "name": "Semaphore",
   "applicationCategory": "DeveloperApplication",
   "operatingSystem": "Cross-platform",
+  "softwareVersion": "0.1.0",
+  "programmingLanguage": "Rust",
   "description": "A length-prefixed binary message protocol and network protocol in Rust, with a framing codec, a typed request/response protocol, and a TCP server and client.",
   "author": {
     "@type": "Person",
@@ -115,6 +118,24 @@
   .badge-err{color:#c23434}
   .badge-ok{color:#1a8a4a}
   .oversize-panel{max-width:940px;margin:20px auto 0}
+  nav .v{color:var(--faint);font-family:var(--mono);font-size:12px}
+  .semstat{display:flex;gap:24px;flex-wrap:wrap;margin:0 0 20px;padding:14px 18px;background:var(--panel);border-radius:12px;border:1px solid var(--line)}
+  .semstat div{display:flex;flex-direction:column}
+  .semstat .n{font-size:23px;font-weight:680;letter-spacing:-.02em;color:var(--ink)}
+  .semstat .k{font-size:11.5px;color:var(--faint);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+  .term{max-width:720px;margin:38px auto 0;background:#15161c;color:#ececf4;border-radius:14px;padding:22px 24px;font-family:var(--mono);font-size:13.5px;line-height:1.75;overflow-x:auto;white-space:pre}
+  .term .p{color:#7ea1f7}.term .cc{color:#8a8d9a}.term .g{color:#7fd6a0}
+  .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;max-width:900px;margin:48px auto 0}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .prim{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:22px 24px}
+  .prim h3{font-size:16px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .prim p{color:var(--muted);font-size:14.5px;line-height:1.55}
+  .tg{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent)}
+  .rows{max-width:820px;margin:44px auto 0}
+  .rows .row2{display:grid;grid-template-columns:minmax(150px,1fr) 2fr;gap:14px 38px;padding:22px 0;border-top:1px solid var(--line)}
+  .rows .row2:first-child{border-top:none}
+  .rows .row2 b{font-size:17px}.rows .row2 p{color:var(--muted);font-size:15px}
+  @media(max-width:640px){.rows .row2{grid-template-columns:1fr;gap:6px}}
 </style>
 <link rel="author" href="https://github.com/pavanchow">
 <script type="application/ld+json">
@@ -125,8 +146,9 @@
   <nav><div class="row">
     <div class="brand"><img src="logo.svg" class="brandlogo" alt="" width="22" height="22">Semaphore</div>
     <div class="links">
-      <a href="#demo">Demo</a><a href="#wire-format">Wire format</a><a href="#source">Usage</a>
+      <a href="#demo">Demo</a><a href="#wire-format">Wire format</a><a href="#primitives">Primitives</a><a href="#source">Use it</a>
       <a class="gh" href="https://github.com/pavanchow/semaphore">GitHub</a>
+      <span class="v">v0.1.0</span>
     </div>
   </div></nav>
 
@@ -156,6 +178,7 @@
   <div class="stage">
     <div id="demo" class="card">
       <p class="caption">pick a message, watch it become bytes, then decode those bytes one at a time</p>
+      <div class="semstat" id="semstat"></div>
 
       <div class="demo-grid">
         <div class="demo-panel">
@@ -226,6 +249,24 @@
     </div>
   </section>
 
+  <section id="cli">
+    <h2>Two terminals, one socket</h2>
+    <p class="lead">Start the server in one terminal, then drive it from another. Real output from the CLI, no async runtime behind it.</p>
+    <div class="term"><span class="cc"># terminal 1: run the server</span>
+<span class="p">$</span> cargo run -- serve --addr 127.0.0.1:7878
+<span class="g">semaphore server listening on 127.0.0.1:7878</span>
+
+<span class="cc"># terminal 2: talk to it</span>
+<span class="p">$</span> cargo run -- ping --addr 127.0.0.1:7878
+<span class="g">PONG</span>
+<span class="p">$</span> cargo run -- set --addr 127.0.0.1:7878 name semaphore
+<span class="g">OK</span>
+<span class="p">$</span> cargo run -- get --addr 127.0.0.1:7878 name
+<span class="g">semaphore</span>
+<span class="p">$</span> cargo run -- get --addr 127.0.0.1:7878 missing
+<span class="g">(not found)</span></div>
+  </section>
+
   <section>
     <h2>Why it exists</h2>
     <p class="lead">Most people reach for a framework the moment two processes need to talk over a socket. Semaphore takes the other path, small enough to read in one sitting, with every layer a pure, unit-tested piece you can hold in your head.</p>
@@ -233,6 +274,20 @@
       <div class="icard"><h3>Framing codec</h3><p>A pure, dependency-free encoder and a streaming decoder that reassembles a frame correctly even when it arrives split across many reads, and rejects an oversize length prefix before allocating anything.</p></div>
       <div class="icard"><h3>Typed protocol</h3><p>PING and PONG, plus a small key-value SET and GET request-response protocol encoded on top of frames, with a one-byte tag and bounds-checked bodies.</p></div>
       <div class="icard"><h3>TCP server and client</h3><p>Plain std::net and OS threads, no async runtime. The server holds an in-memory map, the client issues blocking SET, GET, and PING calls.</p></div>
+    </div>
+  </section>
+
+  <section id="primitives">
+    <p class="eyebrow" style="text-align:center">The primitives that matter</p>
+    <h2 style="margin-top:16px">Six pieces, each unit-tested on its own</h2>
+    <p class="lead">Every layer is a pure piece you can read and test in isolation. These are the real building blocks in the crate.</p>
+    <div class="grid2">
+      <div class="prim"><h3>Frame codec <span class="tg">frame.rs</span></h3><p>A frame is a <code>Vec&lt;u8&gt;</code> payload. <code>encode</code> writes a 4-byte big-endian length prefix then the bytes. No magic number, version, or checksum: correctness comes from the decoder being strict about the length field.</p></div>
+      <div class="prim"><h3>Streaming decoder <span class="tg">state machine</span></h3><p>A two-state machine (reading length, then reading payload) that keeps state between calls. Feeding bytes one at a time produces exactly the same frames as feeding them all at once.</p></div>
+      <div class="prim"><h3>Frame cap <span class="tg">16 MiB</span></h3><p><code>MAX_FRAME_LEN</code> bounds the payload. A declared length above the cap is rejected before any buffer is allocated, so a bad prefix costs a <code>u32</code> comparison, not attacker-chosen memory.</p></div>
+      <div class="prim"><h3>Typed messages <span class="tg">protocol.rs</span></h3><p>A one-byte tag plus a tag-specific body: PING, PONG, SET, GET, VALUE, NOT_FOUND. Decoding bounds-checks every read before slicing, so a truncated body is a typed error, not a panic.</p></div>
+      <div class="prim"><h3>Threaded server <span class="tg">net.rs</span></h3><p>A blocking <code>accept()</code> loop that spawns one OS thread per connection and shares a single <code>HashMap</code> behind a <code>Mutex</code>. Each thread reads a message, reacts, writes a reply, repeats.</p></div>
+      <div class="prim"><h3>Typed errors <span class="tg">no strings</span></h3><p>Each layer defines its own enum: <code>FrameError</code>, <code>ProtocolError</code>, <code>NetError</code>. Truncation, oversize length, and malformed bodies are values the caller can match on, propagated with <code>?</code>.</p></div>
     </div>
   </section>
 
@@ -254,14 +309,34 @@
     </table>
   </section>
 
+  <section id="choices">
+    <h2>The choices behind it</h2>
+    <p class="lead">Most people reach for a framework the moment two processes need to talk over a socket. Semaphore takes the other path. These are the deliberate trade-offs, straight from the design notes.</p>
+    <div class="rows">
+      <div class="row2"><b>Length prefix, not delimiters</b><p>Every message is a 4-byte big-endian length then exactly that many bytes. No escaping, no scanning for a terminator: the decoder knows the payload size before it reads a byte of it.</p></div>
+      <div class="row2"><b>A hard cap before allocation</b><p>The length is checked against a 16 MiB cap before any payload buffer exists. A malicious or corrupt prefix costs a comparison, not attacker-chosen memory. The decoder resets so the next frame can still be read.</p></div>
+      <div class="row2"><b>Blocking std::net, no async</b><p>The server is a plain <code>accept()</code> loop with one OS thread per connection. The whole request lifecycle is traceable in a debugger without reasoning about a task scheduler.</p></div>
+      <div class="row2"><b>Typed errors at every layer</b><p><code>FrameError</code>, <code>ProtocolError</code>, and <code>NetError</code> instead of strings or panics. Truncation, oversize, and malformed bodies are all values a caller can match on.</p></div>
+      <div class="row2"><b>Small on purpose</b><p>No connection pooling, no pipelining, no version byte or checksum. Around 690 lines of Rust across frame, protocol, and net, small enough to read in one sitting.</p></div>
+    </div>
+  </section>
+
   <section id="source">
-    <h2>Usage</h2>
-    <p class="lead">Start the server, then talk to it from the CLI or as a library.</p>
-    <pre>cargo run -- serve --addr 127.0.0.1:7878
+    <h2>Use it</h2>
+    <p class="lead">One crate, no runtime dependencies beyond clap for the CLI. Drive it from the command line, embed it as a library, or run the tests.</p>
+    <div class="rows">
+      <div class="row2"><b>serve</b><p><code>semaphore serve --addr 127.0.0.1:7878</code> runs the blocking TCP server with an in-memory key-value store.</p></div>
+      <div class="row2"><b>ping / set / get</b><p>Client subcommands over the same wire protocol. <code>ping</code> expects <code>PONG</code>; <code>set</code> replies <code>OK</code>; <code>get</code> prints the value or <code>(not found)</code>.</p></div>
+      <div class="row2"><b>Library</b><p><code>Client::connect(addr)</code> then <code>client.set(key, bytes)</code> and <code>client.get(key)</code>: blocking request/reply calls that return a typed <code>Result</code>.</p></div>
+      <div class="row2"><b>Tests</b><p><code>cargo test</code> runs 14 unit tests (codec roundtrips, byte-at-a-time reassembly, oversize rejection, malformed bodies) plus a live-server integration test.</p></div>
+    </div>
+    <pre style="margin-top:36px">cargo run -- serve --addr 127.0.0.1:7878
 
 cargo run -- ping --addr 127.0.0.1:7878
 cargo run -- set  --addr 127.0.0.1:7878 name semaphore
-cargo run -- get  --addr 127.0.0.1:7878 name</pre>
+cargo run -- get  --addr 127.0.0.1:7878 name
+
+cargo test</pre>
   </section>
 
   <noscript>
@@ -555,6 +630,22 @@ cargo run -- get  --addr 127.0.0.1:7878 name</pre>
 
   updateFieldVisibility();
   computeAndRender();
+})();
+</script>
+<script>
+/* additive: a live stat row over the bytes the encoder renders, engine IIFE untouched */
+(function(){
+  var hd=document.getElementById("hexdump"),es=document.getElementById("semstat");
+  if(!hd||!es)return;
+  function stats(){
+    var total=hd.querySelectorAll(".hb").length;
+    var len=hd.querySelectorAll(".hb-len").length;
+    var body=total-len;
+    es.innerHTML=[["bytes on wire",total],["length prefix",len],["body bytes",body],["frame cap","16 MiB"]]
+      .map(function(kv){return '<div><span class="n">'+kv[1]+'</span><span class="k">'+kv[0]+'</span></div>';}).join("");
+  }
+  new MutationObserver(stats).observe(hd,{childList:true});
+  stats();
 })();
 </script>
 </body>
