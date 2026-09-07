@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Semaphore: a length-prefixed network protocol in Rust</title>
+<link rel="icon" type="image/svg+xml" href="logo.svg">
 <meta name="description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec plus a small typed request/response protocol over TCP. No frameworks, no async runtime.">
 <meta name="author" content="Pavan Nallamothu (pavanchow)">
 <link rel="canonical" href="https://pavanchow.github.io/semaphore/">
@@ -130,6 +131,7 @@
   </div></nav>
 
   <div class="hero">
+    <img src="logo.svg" alt="Semaphore logo" width="72" height="72">
     <p class="eyebrow">Network protocol in Rust</p>
     <h1>Bytes on the wire,<br>framed by hand.</h1>
     <p class="sub">Semaphore is a length-prefixed binary message protocol built from scratch, with a framing codec you can read end to end, plus a TCP server and client that speak it.</p>
@@ -138,6 +140,18 @@
       <a class="btn btn-secondary" href="#demo">Try the live demo</a>
     </div>
   </div>
+
+  <details style="max-width:940px;margin:26px auto 0;padding:0 28px">
+    <summary style="cursor:pointer;font-weight:600;font-size:15px">How to use this playground</summary>
+    <div style="margin-top:12px;color:#7c8492;font-size:15px;line-height:1.6">
+      Pick a message on the left, watch it become bytes, then feed those bytes to the decoder one at a time to see a frame reassemble.
+      <ul style="margin:10px 0 0;padding-left:20px">
+        <li><b>Encoder:</b> choose SET, GET, PING, or RAW and edit the fields to see the 4-byte length prefix and the body update live.</li>
+        <li><b>Streaming decoder:</b> press <b>Step one byte</b> (or <b>Play</b>) to watch the length prefix, then the payload, reassemble byte by byte.</li>
+        <li><b>Oversize length prefix:</b> feed a huge declared length and see it rejected before any payload buffer is allocated.</li>
+      </ul>
+    </div>
+  </details>
 
   <div class="stage">
     <div id="demo" class="card">

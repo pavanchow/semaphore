@@ -1,3 +1,5 @@
+<img src="docs/logo.svg" alt="Semaphore logo" width="96">
+
 # Semaphore
 
 **A tiny, readable network protocol in Rust you can understand end to end.**

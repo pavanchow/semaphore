@@ -1,0 +1,10 @@
+<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Semaphore logo">
+  <rect x="59" y="26" width="10" height="82" rx="5" fill="#6b7280"/>
+  <rect x="40" y="103" width="48" height="10" rx="5" fill="#6b7280"/>
+  <g transform="rotate(-32 64 40)">
+    <rect x="64" y="33" width="48" height="14" rx="4" fill="#2f6fed"/>
+    <rect x="101" y="33" width="9" height="14" rx="2.5" fill="#a9c4fb"/>
+  </g>
+  <circle cx="64" cy="40" r="7" fill="#f5a623"/>
+  <circle cx="64" cy="40" r="2.6" fill="#fff"/>
+</svg>
