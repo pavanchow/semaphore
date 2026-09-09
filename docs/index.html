@@ -131,6 +131,25 @@
   .rows .row2:first-child{border-top:none}
   .rows .row2 b{font-size:17px}.rows .row2 p{color:var(--muted);font-size:15px}
   @media(max-width:640px){.rows .row2{grid-template-columns:1fr;gap:6px}}
+
+  @media (prefers-color-scheme: dark){
+    :root{
+      --accent:#5b8bf5;--accent-soft:#182338;
+      --ink:#ececf0;--muted:#a4a7b3;--faint:#71747f;
+      --line:#2a2b32;--panel:#17181e;--panel2:#1b1c22;
+    }
+    body{background:#0d0e12}
+    nav{background:rgba(13,14,18,.82)}
+    .btn-primary{background:var(--accent);color:#0d0e12}
+    .btn-secondary{background:#17181e;color:var(--ink)}
+    .card{background:linear-gradient(180deg,#191a21,#131319);box-shadow:0 1px 0 rgba(255,255,255,.03) inset,0 18px 50px -30px rgba(0,0,0,.6)}
+    .seg-payload{background:#17181e}
+    .demo-panel{background:#17181e}
+    .demo-panel input[type="text"]{background:#0d0e12;color:var(--ink)}
+    .msgtype-btn{background:#17181e}
+    .badge-err{color:#f87171}
+    .badge-ok{color:#34d399}
+  }
 </style>
 </head>
 <body>
