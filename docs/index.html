@@ -1,36 +1,33 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Semaphore: a length-prefixed network protocol in Rust</title>
 <link rel="icon" type="image/svg+xml" href="logo.svg">
-<meta name="description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec plus a small typed request/response protocol over TCP. No frameworks, no async runtime.">
-<meta name="author" content="Pavan Nallamothu (pavanchow)">
-<meta name="keywords" content="network protocol, binary protocol, length-prefixed framing, framing codec, streaming decoder, TCP, Rust, std::net, wire format, message protocol, key-value protocol, protocol design, Semaphore, Pavan Nallamothu, pavanchow">
+<title>Semaphore: a network protocol codec in Rust | Pavan Nallamothu</title>
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
+<meta name="description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec and a typed request response protocol over TCP, no async runtime. By Pavan Nallamothu.">
+<meta name="keywords" content="network protocol rust, length-prefixed framing, framing codec, binary protocol, wire format, tcp protocol rust, streaming decoder, request response protocol, protocol design, std::net, message framing, protocol from scratch, Semaphore, Pavan Nallamothu, pavanchow">
+<meta name="author" content="Pavan Nallamothu">
+<link rel="author" href="https://github.com/pavanchow">
 <link rel="canonical" href="https://pavanchow.github.io/semaphore/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Semaphore: a length-prefixed network protocol in Rust">
-<meta property="og:description" content="A length-prefixed framing codec and a small typed request/response protocol over TCP, built from scratch in Rust.">
+<meta property="og:site_name" content="Pavan Nallamothu">
+<meta property="og:locale" content="en_US">
+<meta property="og:title" content="Semaphore: a network protocol codec in Rust | Pavan Nallamothu">
+<meta property="og:description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec and a typed request response protocol over TCP, no async runtime. By Pavan Nallamothu.">
 <meta property="og:url" content="https://pavanchow.github.io/semaphore/">
+<meta property="og:image" content="https://pavanchow.github.io/semaphore/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Semaphore by Pavan Nallamothu">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Semaphore: a network protocol codec in Rust | Pavan Nallamothu">
+<meta name="twitter:description" content="Semaphore is a network protocol in Rust: a length-prefixed framing codec and a typed request response protocol over TCP, no async runtime. By Pavan Nallamothu.">
+<meta name="twitter:image" content="https://pavanchow.github.io/semaphore/og-image.png">
+<meta name="twitter:image:alt" content="Semaphore by Pavan Nallamothu">
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "Semaphore",
-  "applicationCategory": "DeveloperApplication",
-  "operatingSystem": "Cross-platform",
-  "softwareVersion": "0.1.0",
-  "programmingLanguage": "Rust",
-  "description": "A length-prefixed binary message protocol and network protocol in Rust, with a framing codec, a typed request/response protocol, and a TCP server and client.",
-  "author": {
-    "@type": "Person",
-    "name": "Pavan Nallamothu"
-  },
-  "url": "https://pavanchow.github.io/semaphore/",
-  "codeRepository": "https://github.com/pavanchow/semaphore",
-  "programmingLanguage": "Rust"
-}
+{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","@id":"https://pavanchow.github.io/semaphore/#software","name":"Semaphore","applicationCategory":"DeveloperApplication","operatingSystem":"Linux, macOS, Windows","description":"Semaphore is a network protocol in Rust: a length-prefixed framing codec and a typed request response protocol over TCP, no async runtime. By Pavan Nallamothu.","url":"https://pavanchow.github.io/semaphore/","image":"https://pavanchow.github.io/semaphore/og-image.png","softwareVersion":"0.1.0","programmingLanguage":"Rust","codeRepository":"https://github.com/pavanchow/semaphore","datePublished":"2026-08-21","author":{"@id":"https://github.com/pavanchow#person"},"publisher":{"@id":"https://github.com/pavanchow#person"},"keywords":"network protocol rust, length-prefixed framing, framing codec, binary protocol, wire format, tcp protocol rust, streaming decoder, request response protocol, protocol design, std::net, message framing, protocol from scratch, Semaphore, Pavan Nallamothu, pavanchow","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"featureList":["Length-prefixed framing codec","Streaming decoder","Typed request response protocol","TCP transport","No async runtime","No dependencies"]},{"@type":"Person","@id":"https://github.com/pavanchow#person","name":"Pavan Nallamothu","alternateName":"pavanchow","url":"https://github.com/pavanchow","jobTitle":"Software Engineer and Security Researcher","knowsAbout":["Rust","networking","protocol design","TCP","binary framing","systems programming"],"sameAs":["https://github.com/pavanchow","https://hackerone.com/pavanchow"]},{"@type":"WebSite","@id":"https://pavanchow.github.io/semaphore/#website","name":"Semaphore by Pavan Nallamothu","url":"https://pavanchow.github.io/semaphore/","author":{"@id":"https://github.com/pavanchow#person"}},{"@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Pavan Nallamothu","item":"https://github.com/pavanchow"},{"@type":"ListItem","position":2,"name":"Semaphore","item":"https://pavanchow.github.io/semaphore/"}]},{"@type":"WebPage","@id":"https://pavanchow.github.io/semaphore/#webpage","url":"https://pavanchow.github.io/semaphore/","name":"Semaphore: a network protocol codec in Rust | Pavan Nallamothu","isPartOf":{"@id":"https://pavanchow.github.io/semaphore/#website"},"about":{"@id":"https://pavanchow.github.io/semaphore/#software"},"author":{"@id":"https://github.com/pavanchow#person"},"inLanguage":"en"}]}
 </script>
 <style>
   :root{
@@ -137,10 +134,6 @@
   .rows .row2 b{font-size:17px}.rows .row2 p{color:var(--muted);font-size:15px}
   @media(max-width:640px){.rows .row2{grid-template-columns:1fr;gap:6px}}
 </style>
-<link rel="author" href="https://github.com/pavanchow">
-<script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Person","name":"Pavan Nallamothu","alternateName":"pavanchow","url":"https://github.com/pavanchow","sameAs":["https://github.com/pavanchow","https://hackerone.com/pavanchow"]}
-</script>
 </head>
 <body>
   <nav><div class="row">
@@ -349,7 +342,8 @@ cargo test</pre>
     <p>A binary protocol you can read end to end.</p>
     <p style="margin-top:12px"><a href="https://github.com/pavanchow/semaphore">github.com/pavanchow/semaphore</a></p>
     <p style="margin-top:12px">By <span class="name">Pavan Nallamothu</span>.</p>
-  </footer>
+  <nav class="more-tools" aria-label="More open-source tools by Pavan Nallamothu" style="max-width:820px;margin:40px auto 0;padding-top:28px;border-top:1px solid rgba(128,128,128,.2);font-size:14px;line-height:2;text-align:center"><div style="font-weight:600;margin-bottom:8px">More open-source tools by Pavan Nallamothu</div><div><a href="https://pavanchow.github.io/datagram/">Datagram, a reliable TCP transport engine</a> &middot; <a href="https://pavanchow.github.io/hearth/">Hearth, an HTTP server on std::net</a> &middot; <a href="https://pavanchow.github.io/conduit/">Conduit, a from-scratch PostgreSQL driver</a> &middot; <a href="https://pavanchow.github.io/rift/">Rift, a programmable reverse proxy</a> &middot; <a href="https://pavanchow.github.io/echofront/">Echofront, a layer 7 reverse proxy</a> &middot; <a href="https://pavanchow.github.io/riverbed/">Riverbed, a message broker</a> &middot; <a href="https://github.com/pavanchow">All tools on github.com/pavanchow</a></div></nav>
+</footer>
 
 <script>
 (function () {
