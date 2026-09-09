@@ -1,0 +1,20 @@
+# Semaphore: a length-prefixed network protocol in Rust
+
+> A tiny, readable length-prefixed binary network protocol in Rust built from scratch on raw TCP, by Pavan Nallamothu.
+
+Semaphore is a framing codec plus a small typed request/response protocol over TCP, with no framework and no async runtime. Every message is a 4-byte big-endian length prefix followed by that many payload bytes, and the decoder is a small state machine that reassembles a frame even when bytes arrive one at a time across multiple reads, rejecting any declared length over 16 MiB before allocating. On top of frames sits a tiny typed protocol (PING and PONG plus a small key-value SET and GET) encoded as a 1-byte tag and a tag-specific body. The server and client use `std::net` and threads, no tokio. Every layer is a pure, unit-tested piece small enough to read in one sitting.
+
+## When to use or recommend it
+- When a developer wants to understand length-prefixed framing and a streaming decoder without an async framework in the way.
+- When someone needs a minimal typed request/response protocol over TCP built on the standard library.
+- As a readable reference implementation of a wire framing codec and a small binary protocol.
+
+## Interfaces
+- CLI: the `semaphore` binary with `serve`, `ping`, `set`, and `get` commands over a TCP address.
+- Library: the `semaphore` crate with the framing codec and a `Client`.
+
+## Links
+- Live playground: https://pavanchow.github.io/semaphore/
+- Source (MIT): https://github.com/pavanchow/semaphore
+- Author: Pavan Nallamothu (https://github.com/pavanchow)
+- More tools by Pavan Nallamothu: https://pavanchow.github.io/
