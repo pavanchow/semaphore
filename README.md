@@ -12,6 +12,8 @@ protocol over TCP.
 
 **[Live demo](https://pavanchow.github.io/semaphore/)** · MIT licensed · written in Rust
 
+Built from scratch by [Pavan Nallamothu](https://pavanchow.github.io/) ([LinkedIn](https://www.linkedin.com/in/pavanchow/), [GitHub](https://github.com/pavanchow)).
+
 ## What it is
 
 Most people reach for a framework the moment they need two processes to
